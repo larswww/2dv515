@@ -1,67 +1,105 @@
 package a1_webCrawler;
 
-import org.w3c.dom.NodeList;
+import org.jsoup.*;
+import org.jsoup.nodes.Document;
 
 import java.io.BufferedReader;
-import java.io.IOError;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OpenPage {
-    //    String pageUrl = "/wiki/Programming_language";
     private int maxLevel = 2;
     private int maxLinks = 1000;
+    ArrayList<Thread> threads = new ArrayList<Thread>();
     List<LinkNode> links = new ArrayList<>();
     Set<LinkNode> visited = new HashSet<LinkNode>();
     Map<String, LinkNode> traversed = new HashMap<String, LinkNode>();
 
-    public OpenPage() {
-        links.add(new LinkNode("/wiki/Programming_language"));
+    public OpenPage(LinkNode root) {
+        links.add(root);
         BFS();
+    }
 
-        Iterator it = links.iterator();
-        while (it.hasNext()) {
-            System.out.println(it.next());
+    private class VisitThread extends Thread {
+        LinkNode nd;
+
+        public VisitThread(LinkNode node) {
+            nd = node;
+        }
+
+        public void run() {
+            CreateURL(nd);
+            ExtractLinks(nd);
+            getText(nd);
+            traversed.put(nd.link, nd); //todo how to handle not found/dead links?
         }
     }
 
     private void VisitLink(LinkNode node) {
         CreateURL(node);
-        traversed.put(node.link, node); //todo how to handle not found/dead links?
         ExtractLinks(node);
+        getText(node);
+        traversed.put(node.link, node); //todo how to handle not found/dead links?
+
     }
 
-    private class VisitThread extends Thread {
+    private void getText(LinkNode node) {
+        Document doc = Jsoup.parse(node.contents);
+        doc.select("div#footer").remove();
+        doc.select("div#mw-navigation").remove();
+        doc.select("div#left-navigation").remove();
+        doc.select("div#right-navigation").remove();
 
-        public VisitThread(LinkNode node) {
-            CreateURL(node);
-            traversed.put(node.link, node); //todo how to handle not found/dead links?
-            ExtractLinks(node);
+        String text = doc.body().text();
+        preprocessText(text);
+        node.text = text;
+    }
+
+    private void preprocessText(String text) {
+        String[] toReplace = {"\\<.*?>", "\\[.*?\\]", "\\d{4}-\\d{2}-\\d{2}", "\\.", ",", "\\?", ";", "\"", ":", "\\(", "\\*", "_", "!", "#", "\\)"};
+        text = text.toLowerCase();
+        text = text.replaceAll("\r", " ");
+        text = text.replaceAll("\n", " ");
+
+        for (String str : toReplace) {
+            text = text.replaceAll(str, "");
         }
+
     }
 
     private void BFS() {
         int bfsNo = 0;
+        LinkNode nd = links.remove(0);
+        nd.bfsNo = bfsNo++;
+        visited.add(nd);
+        VisitLink(nd);
 
         // loop based on depth requirement
         // and only whilst max links is below max links requirement
-        while (traversed.size() <= maxLinks && !links.isEmpty()) {
-            LinkNode link = links.remove(0); //todo use a treeSet instead?
+        while (visited.size() <= maxLinks && !links.isEmpty()) {
+            LinkNode node = links.remove(0); //todo use a treeSet instead?
 
-            if (!visited.contains(link)) {
-                link.bfsNo = bfsNo++;
-                visited.add(link);
-                VisitThread vl = new VisitThread(link);
-                vl.start();
+            if (!visited.contains(node)) {
+                node.bfsNo = bfsNo++;
+                visited.add(node);
+                VisitLink(node);
+//                VisitThread vl = new VisitThread(node);
+//                threads.add(vl);
+//                vl.start();
 
-//                VisitLink(link);
             }
         }
+
+//        for (Thread t: threads) {
+//            try {
+//                t.join();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
         System.out.println("done");
     }
@@ -69,7 +107,7 @@ public class OpenPage {
     private String CreateURL(LinkNode node) {
         String contents = "";
         try {
-            URL url = new URL("https://en.wikipedia.org" + node.link);
+            URL url = new URL("https://en.wikipedia.org/wiki/" + node.link);
             BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
             String line;
 
@@ -81,6 +119,7 @@ public class OpenPage {
             node.contents = contents;
 
         } catch (Exception e) {
+            node.contents = contents;
             System.err.println(e.getMessage());
         }
 
@@ -107,7 +146,6 @@ public class OpenPage {
         }
     }
 
-
     private boolean LinkFilter(String link) {
         String copy = link.toLowerCase();
         String[] toFilterStart = {"#", "/wiki/help:", "/wiki/category:", "/wiki/portal:", "/wiki/special:", "/wiki/file:", "/wiki/template:", "/wiki/wikipedia:", "/wiki/template_talk:", "/wiki/talk:", "http://", "https://", "//", "/w/", "/wiki/Wikipedia:", "android-app:"};
@@ -126,23 +164,5 @@ public class OpenPage {
         }
 
         return true;
-    }
-
-    private class LinkNode {
-        //todo associate the contents with each node?
-        Set<LinkNode> preds = new HashSet<LinkNode>();
-        Set<LinkNode> succs = new HashSet<LinkNode>();
-        int bfsNo;
-        String link;
-        String contents;
-
-        LinkNode(String lk) {
-            link = lk;
-        }
-
-        @Override
-        public int hashCode() {
-            return link.hashCode();
-        }
     }
 }
