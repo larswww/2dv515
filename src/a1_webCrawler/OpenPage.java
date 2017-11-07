@@ -15,11 +15,13 @@ public class OpenPage {
     private int maxLinks = 1000;
     ArrayList<Thread> threads = new ArrayList<Thread>();
     List<LinkNode> links = new ArrayList<>();
-    Set<LinkNode> visited = new HashSet<LinkNode>();
-    Map<String, LinkNode> traversed = new HashMap<String, LinkNode>();
+    Set<String> visited = new HashSet<String>();
+    Map<String, LinkNode> bfsResult = new HashMap<String, LinkNode>();
 
     public OpenPage(LinkNode root) {
-        links.add(root);
+        root.bfsNo = 0;
+        visited.add(root.link);
+        VisitLink(root);
         BFS();
     }
 
@@ -31,10 +33,16 @@ public class OpenPage {
         }
 
         public void run() {
+            try {
+                sleep((int)Math.random() * 60000 * nd.bfsNo);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             CreateURL(nd);
             ExtractLinks(nd);
             getText(nd);
-            traversed.put(nd.link, nd); //todo how to handle not found/dead links?
+            bfsResult.put(nd.link, nd); //todo how to handle not found/dead links?
+            System.out.println(nd.link);
         }
     }
 
@@ -42,7 +50,7 @@ public class OpenPage {
         CreateURL(node);
         ExtractLinks(node);
         getText(node);
-        traversed.put(node.link, node); //todo how to handle not found/dead links?
+        bfsResult.put(node.link, node); //todo how to handle not found/dead links?
 
     }
 
@@ -71,20 +79,15 @@ public class OpenPage {
     }
 
     private void BFS() {
-        int bfsNo = 0;
-        LinkNode nd = links.remove(0);
-        nd.bfsNo = bfsNo++;
-        visited.add(nd);
-        VisitLink(nd);
-
+        int bfsNo = 1; //starts from 1 since root is initiated with bfs 0
         // loop based on depth requirement
         // and only whilst max links is below max links requirement
         while (visited.size() <= maxLinks && !links.isEmpty()) {
             LinkNode node = links.remove(0); //todo use a treeSet instead?
 
-            if (!visited.contains(node)) {
+            if (!visited.contains(node.link)) {
                 node.bfsNo = bfsNo++;
-                visited.add(node);
+                visited.add(node.link);
                 VisitLink(node);
 //                VisitThread vl = new VisitThread(node);
 //                threads.add(vl);
@@ -92,7 +95,7 @@ public class OpenPage {
 
             }
         }
-
+//
 //        for (Thread t: threads) {
 //            try {
 //                t.join();
@@ -119,7 +122,11 @@ public class OpenPage {
             node.contents = contents;
 
         } catch (Exception e) {
-            node.contents = contents;
+            if (contents == null) {
+                CreateURL(node);
+            } else {
+               return node.contents = contents;
+            }
             System.err.println(e.getMessage());
         }
 
@@ -138,9 +145,11 @@ public class OpenPage {
 
                 if (LinkFilter(link)) {
                     LinkNode ln = new LinkNode(link);
-                    ln.preds.add(node);
-                    node.succs.add(ln);
-                    links.add(ln); //todo faster if it's a set? and check if it's not in the set already before running linkfilter? Do i care about iteration order of the links? set = random now = order of find..
+                    if (!visited.contains(ln.link) || !links.contains(ln)) {
+                        ln.preds.add(node);
+                        node.succs.add(ln);
+                        links.add(ln);
+                    }
                 }
             }
         }

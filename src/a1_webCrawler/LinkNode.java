@@ -14,12 +14,21 @@ public class LinkNode {
     String text;
 
     LinkNode(String lk) {
+        //todo handle link containing slashes here?
         link = lk.substring(6);
     }
 
     @Override
     public int hashCode() {
         return link.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+            if (!(o instanceof LinkNode)) return false;
+            LinkNode ln = (LinkNode) o;
+            return this.link.equals(ln.link);
+
     }
 
     public Iterator<LinkNode> successors() {

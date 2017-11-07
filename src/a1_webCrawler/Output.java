@@ -28,8 +28,15 @@ public class Output {
     }
 
 
+    //todo handle links that contain slashes..
     private File CreateFile(String name, String dir) {
-        File f = new File(System.getProperty("user.dir") + "/data/" + dir + "/" + root.link);
+        String link = root.link;
+
+        while (link.indexOf("/") > 0) {
+            link = link.replace("/", "#sl#");
+        }
+
+        File f = new File(System.getProperty("user.dir") + "/data/" + dir + "/" + link);
         f = new File(f,name);
         return f;
     }
