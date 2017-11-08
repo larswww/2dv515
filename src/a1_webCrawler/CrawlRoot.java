@@ -10,52 +10,30 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OpenPage {
-    private int maxLevel = 2;
-    private int maxLinks = 1000;
-    ArrayList<Thread> threads = new ArrayList<Thread>();
+public class CrawlRoot {
+    private int maxLinks = 999; // + root hence if 1000 = 999
     List<LinkNode> links = new ArrayList<>();
     Set<String> visited = new HashSet<String>();
     Map<String, LinkNode> bfsResult = new HashMap<String, LinkNode>();
 
-    public OpenPage(LinkNode root) {
+    public CrawlRoot(LinkNode root) {
         root.bfsNo = 0;
         visited.add(root.link);
         VisitLink(root);
         BFS();
     }
 
-    private class VisitThread extends Thread {
-        LinkNode nd;
-
-        public VisitThread(LinkNode node) {
-            nd = node;
-        }
-
-        public void run() {
-            try {
-                sleep((int)Math.random() * 60000 * nd.bfsNo);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            CreateURL(nd);
-            ExtractLinks(nd);
-            getText(nd);
-            bfsResult.put(nd.link, nd); //todo how to handle not found/dead links?
-            System.out.println(nd.link);
-        }
-    }
-
     private void VisitLink(LinkNode node) {
         CreateURL(node);
         ExtractLinks(node);
         getText(node);
-        bfsResult.put(node.link, node); //todo how to handle not found/dead links?
+        bfsResult.put(node.link, node);
 
     }
 
     private void getText(LinkNode node) {
         Document doc = Jsoup.parse(node.contents);
+        //todo do i want these links?
         doc.select("div#footer").remove();
         doc.select("div#mw-navigation").remove();
         doc.select("div#left-navigation").remove();
@@ -80,31 +58,17 @@ public class OpenPage {
 
     private void BFS() {
         int bfsNo = 1; //starts from 1 since root is initiated with bfs 0
-        // loop based on depth requirement
-        // and only whilst max links is below max links requirement
+
         while (visited.size() <= maxLinks && !links.isEmpty()) {
-            LinkNode node = links.remove(0); //todo use a treeSet instead?
+            LinkNode node = links.remove(0);
 
             if (!visited.contains(node.link)) {
                 node.bfsNo = bfsNo++;
                 visited.add(node.link);
-                VisitLink(node);
-//                VisitThread vl = new VisitThread(node);
-//                threads.add(vl);
-//                vl.start();
 
+                VisitLink(node);
             }
         }
-//
-//        for (Thread t: threads) {
-//            try {
-//                t.join();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
-        System.out.println("done");
     }
 
     private String CreateURL(LinkNode node) {

@@ -21,26 +21,33 @@ public class Output {
     }
 
     private void Build(LinkNode node) {
-        File links = CreateFile(node.link, "Links");
-        WriteFile(links, getLinkString(node));
-        File words = CreateFile(node.link, "Words");
-        WriteFile(words, node.text);
+
+        File link = CreateFile(node.link, "Links");
+        WriteFile(link, getLinkString(node));
+
+        File word = CreateFile(node.link, "Words");
+        WriteFile(word, node.text);
+
+        File raw = CreateFile(node.link, "Raw");
+        WriteFile(raw, node.contents);
     }
 
-
-    //todo handle links that contain slashes..
     private File CreateFile(String name, String dir) {
-        String link = root.link;
 
-        while (link.indexOf("/") > 0) {
-            link = link.replace("/", "#sl#");
+        //handle links with / in linkname such as http://en.wikipedia.org/wiki/input/output
+        while (name.indexOf("/") > 0) {
+            name = name.replace("/", "#sl#");
         }
 
-        File f = new File(System.getProperty("user.dir") + "/data/" + dir + "/" + link);
+        //to avoid creating hidden files fx .NET.txt
+        if (name.startsWith(".")) {
+            name = name.replaceFirst(".", "#.#");
+        }
+
+        File f = new File(System.getProperty("user.dir") + "/data/" + dir + "/" + root.link);
         f = new File(f,name);
         return f;
     }
-
 
     private void WriteFile(File directory, String content) {
         File file = new File(directory + ".txt");

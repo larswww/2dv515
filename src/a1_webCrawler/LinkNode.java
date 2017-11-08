@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class LinkNode {
-    //todo associate the contents with each node?
     Set<LinkNode> preds = new HashSet<LinkNode>();
     Set<LinkNode> succs = new HashSet<LinkNode>();
     int bfsNo;
@@ -14,7 +13,6 @@ public class LinkNode {
     String text;
 
     LinkNode(String lk) {
-        //todo handle link containing slashes here?
         link = lk.substring(6);
     }
 

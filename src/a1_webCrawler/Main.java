@@ -3,11 +3,12 @@ package a1_webCrawler;
 public class Main {
 
     public static void main(String[] args) {
-        LinkNode root = new LinkNode("/wiki/Programming_language");
-        OpenPage op = new OpenPage(root);
-        Output out = new Output(op.bfsResult, root);
+        String[] urls = {"/wiki/Programming_language", "/wiki/Video_game"};
 
-
-	// write your code here
+        for (String url: urls) {
+            LinkNode root = new LinkNode(url);
+            CrawlRoot op = new CrawlRoot(root);
+            Output out = new Output(op.bfsResult, root);
+        }
     }
 }
