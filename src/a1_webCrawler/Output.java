@@ -60,7 +60,6 @@ public class Output {
         } catch (IOException exc) {
             exc.printStackTrace();
         }
-
     }
 
     private String getLinkString(LinkNode node) {
