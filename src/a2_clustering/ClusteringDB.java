@@ -3,6 +3,7 @@ package a2_clustering;
 import java.io.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class ClusteringDB {
@@ -13,7 +14,7 @@ public class ClusteringDB {
     // take each blog line
     // iterate that and words simultaneously
 
-    public void seedDatabase(String path) {
+    public void seedDatabase(Path path) {
 
         try {
             BufferedReader br = new FileOpener(path).br;

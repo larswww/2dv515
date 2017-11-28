@@ -2,6 +2,8 @@ package a2_clustering;
 import org.junit.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +20,7 @@ public class testMethod {
 
     @Before
     public void setup() {
-        db.seedDatabase("/Users/mbp/Documents/Code/2dv515/A1/blogdata.txt");
+        db.seedDatabase(Paths.get("/Users/mbp/Documents/Code/2dv515/A1/data/ParsedWikipedia/Programming 28.15.53.01.txt"));
         articles = db.articles;
 
         for (Article art : articles )
@@ -26,8 +28,11 @@ public class testMethod {
             clusters.add(new Cluster(art));
         }
 
-        kMeans();
 
+//        new ParseWikipediaData("/Users/mbp/Documents/Code/2dv515/A1/providedData/Words/Programming");
+
+        kMeans();
+//
 //        while (clusters.size() > 1) {
 //            iterate();
 //        }
@@ -40,6 +45,8 @@ public class testMethod {
     public void testStuff() {
 
     }
+
+
 
     public void buildTree() {
         html = new ArrayList<>();
